@@ -21,6 +21,22 @@ function onLoad() {
     app.ui.APIKeyInput.addEventListener("keyup", (e) => {
         onKeyUp(e.target.value);
     });
+
+    // Add event listener to button that prompts AI and gets insights to user
+    document.querySelector("#stock-insights-go").addEventListener("click", (e) => {
+        chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+            chrome.tabs.sendMessage(tabs[0].id, {type:"testURL", data: {}}, function(response) {
+                if(chrome.runtime.lastError) {
+                    console.error(chrome.runtime.lastError);
+                } else {
+                    console.log(response.data);
+                    if(response.data.toUpperCase().includes("PASSES")) {
+                        promptAI();
+                    }
+                }
+            });
+        });
+    });
 }
 onLoad();
 
@@ -28,13 +44,13 @@ function onKeyUp(newOpenAiApiKey) {
     localStorage.setItem("ce__stocks_api_key", newOpenAiApiKey);
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {type:"testAPIKey", data: newOpenAiApiKey}, function(response) {
-          if(chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
-          } else {
-            console.log(response.data);
-          }
+            if(chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError);
+            } else {
+                console.log(response.data);
+            }
         });
-      });
+    });
 }
 
 

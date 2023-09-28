@@ -15,11 +15,13 @@ function onLoad() {
     var openAiApiKey = localStorage.getItem("ce__stocks_api_key");
     if(openAiApiKey) {
         app.ui.APIKeyInput.value = openAiApiKey;
+        app.API_KEY = openAiApiKey;
     }
 
     // Add event listener to input that updates API Key
     app.ui.APIKeyInput.addEventListener("keyup", (e) => {
         onKeyUp(e.target.value);
+        app.API_KEY = e.target.value;
     });
 
     // Add event listener to button that prompts AI and gets insights to user

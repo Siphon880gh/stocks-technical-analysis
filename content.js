@@ -244,7 +244,7 @@ async function promptAI(datasets, symbol, apiKey) {
     \`\`\`
 
     
-    I understand the ethical implications. Do not explain ethical implicationos. Please add HTML tags including \`<br/>\` and \`<p>\` to format your response.
+    I understand the ethical implications. Do not explain ethical implications. Please add HTML tags including \`<br/>\` and \`<p>\` to format your response.
 
 JSON:
 ${datasets}`;

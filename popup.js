@@ -1,17 +1,54 @@
-function promptAI() {
-    var API_KEY = "";
-    var PROMPT = "Explain to me the moving average indicator? Keep it short"
+/**
+ * App is singleton object that contains the important peices to communicat to ChatGPT
+ */
+var app = {
+    ui: {
+        APIKeyInput: document.querySelector("#openai-api-key"),
+    },
+    API_KEY: "",
+    PROMPT: "Explain to me the moving average indicator? Keep it short"
+}
 
+function onLoad() {
+
+    // Load API Key into input
+    var openAiApiKey = localStorage.getItem("ce__stocks_api_key");
+    if(openAiApiKey) {
+        app.ui.APIKeyInput.value = openAiApiKey;
+    }
+
+    // Add event listener to input that updates API Key
+    app.ui.APIKeyInput.addEventListener("keyup", (e) => {
+        onKeyUp(e.target.value);
+    });
+}
+onLoad();
+
+function onKeyUp(newOpenAiApiKey) {
+    localStorage.setItem("ce__stocks_api_key", newOpenAiApiKey);
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {type:"testAPIKey", data: newOpenAiApiKey}, function(response) {
+          if(chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+          } else {
+            console.log(response.data);
+          }
+        });
+      });
+}
+
+
+function promptAI() {
     fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
+            'Authorization': 'Bearer ' + app.API_KEY
         },
         body: JSON.stringify({
             messages: [
                 { "role": "system", "content": "You are a helpful stocks trading bot and stocks trading mentor." },
-                { "role": "user", "content": PROMPT }
+                { "role": "user", "content": app.PROMPT }
             ],
             model: "gpt-4-0613",
             temperature: 0.7,

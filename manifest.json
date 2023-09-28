@@ -15,7 +15,7 @@
       "js": ["content.js"]
     }],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; object-src 'self';"
+        "extension_pages": "default-src 'self' https://tradingview.com/ https://platform.openai.com https://camo.githubusercontent.com https://www.linkedin.com https://www.youtube.com; script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline';"
     },
     "action": {
         "default_icon": "icon.png",

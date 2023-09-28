@@ -256,7 +256,7 @@ ${datasets}`;
             { "role": "user", "content": PROMPT }
         ];
         console.log({messages});
-        alert("AI is now processing. This could take 30 seconds or more. Click OK. Then please wait.")
+        alert("AI is now processing. This could take 30 seconds to 1 minute. Click OK. Then please wait. You can visit other tabs while the AI is processing.")
 
         // model: "gpt-4-0613",
         // model: "gpt-4-32k",

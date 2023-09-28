@@ -1,4 +1,4 @@
-# Stocks Technical Analysis
+# Stocks Technical Analysis - Chrome Extension
 
 ![Last Commit](https://img.shields.io/github/last-commit/Siphon880gh/stocks-technical-analysis)
 <a target="_blank" href="https://github.com/Siphon880gh/stocks-technical-analysis" rel="nofollow"><img src="https://img.shields.io/badge/GitHub--blue?style=social&logo=GitHub" alt="Github" data-canonical-src="https://img.shields.io/badge/GitHub--blue?style=social&logo=GitHub" style="max-width:10ch;"></a>
@@ -7,7 +7,7 @@
 
 :page_facing_up: Description:
 ---
-By Weng Fei Fung. A concept occurred to me as I read about the prediction of stock trends through the interpretation of candlestick patterns and the integration of tools like moving averages. I wondered, could I develop a Chrome extension capable of translating chart information into JSON format, subsequently utilizing AI to recognize candlestick configurations, indicators, and formulate potential strategies? There would be no need for computer vision. Motivated by this idea, I successfully created this tool in a single day. Another motivation is that since this is part of an AI pipeline, later I can have it generate more sophisticated insights.
+By Weng Fei Fung. A concept occurred to me as I read about the prediction of stock trends through the interpretation of candlestick patterns and the integration of tools like moving averages. I wondered, could I develop a Chrome extension capable of translating chart information at TradingView.com into JSON format, subsequently utilizing AI to recognize candlestick configurations, indicators, and formulate potential strategies? There would be no need for computer vision. Motivated by this idea, I successfully created this tool in a single day. Another motivation is that since this is part of an AI pipeline, later I can have it generate more sophisticated insights.
 
 :open_file_folder: Table of Contents:
 ---

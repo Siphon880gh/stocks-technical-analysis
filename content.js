@@ -28,9 +28,9 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
             } else {
 
                 // Test API Key again
-                var openAiApiKey = request.data;
-                if(openAiApiKey.length) {
-                    appWFStocks.API_KEY = openAiApiKey;
+                var apiKey = request.data;
+                if(apiKey.length) {
+                    appWFStocks.API_KEY = apiKey;
                     sendResponse({data:"PASSES"});
                 } else {
                     alert("Critical Error: Please enter your OpenAI API Key in the extension.")
@@ -144,10 +144,26 @@ window.scraper = async function() {
         var container = {}
         var chartDataWindows = document.querySelectorAll(".chart-data-window");
         var chartDataWindow = chartDataWindows[0]
-        
-        var delims = ["Date","Time","Open","High","Low","Close","Change","Vol"]
-        
-        var divs = chartDataWindow.querySelectorAll("div").forEach(div=>{
+
+        chartDataWindowA = chartDataWindow;
+        var delims = ["Date","Time"]
+        var divs = chartDataWindowA.querySelectorAll("div").forEach(div=>{
+            for(var i=0; i<delims.length; i++) {
+                var DELIM = delims[i];
+                if(div.textContent.trim() === DELIM && div.textContent.trim().length=== DELIM.length) {
+                    container[DELIM] = {
+                        this: div,
+                        parentText: div.parentNode.textContent,
+                        negativeMatch: div.parentNode.textContent.split(DELIM)?.[1]?.trim()
+                    }
+                    //console.log(container)
+                }
+            } // for
+        });
+
+        chartDataWindowB = chartDataWindow.querySelector('[data-id="_seriesId"]')
+        var delims = ["Open","High","Low","Close","Change","Vol"]
+        var divs = chartDataWindowB.querySelectorAll("div").forEach(div=>{
             for(var i=0; i<delims.length; i++) {
                 var DELIM = delims[i];
                 if(div.textContent.trim() === DELIM && div.textContent.trim().length=== DELIM.length) {
@@ -200,19 +216,51 @@ function loadingAnimation(mode) {
 async function promptAI(datasets, symbol, apiKey) {
     datasets = JSON.stringify(datasets);
 
-    var PROMPT = `Here is stocks for today at ticker symbol ${symbol}. Let me know any candlestick patterns and any indicators. What is the usual strategy? I understand the ethical implications. This is just for educational purposes.
+    var PROMPT = `This is stocks information in JSON format for the ticker symbol ${symbol}.
     
-    ${datasets}`;
+
+    In the JSON, each key is a timemark, eg t1730 is 5:30pm. The corresponding value describes the candlestick's high, low, open, close, the change, and volume (called Vol), and also the date, and therefore each value describes a candlestick.
+    
+    Identify candlestick patterns, indicators, and potential strategies. For example:
+    \`\`\`
+    Here are the candlestick patterns and indicators I see for the SPX stocks today:
+
+    Candlestick Patterns:
+    
+    Doji - The candle for t1330 shows a doji, indicating indecision in the market during that time period.
+    Spinning Top - The candles for t1430 and t1730 have small real bodies, forming spinning tops which signal indecision.
+    Bullish Harami - The t1830 candle body is fully contained within the previous t1730 candle, forming a bullish harami reversal pattern.
+    Indicators:
+    
+    Moving Averages - Price is bouncing between the 50-day MA (around 4325) and 200-day MA (around 4340). This indicates a range-bound environment.
+    MACD - The MACD line is below the signal line and both are below 0, showing overall bearish momentum.
+    RSI - The RSI is currently around 45, meaning the stock is neither overbought nor oversold.
+    Bollinger Bands - Price is trading near the middle band, implying a period of consolidation.
+    Based on this analysis, some potential strategies could be:
+    
+    Range trading - The dojis, harami and moving averages indicate a range bound market. Can look to buy near support around the 50-day MA and sell at resistance near the 200-day MA.
+    Breakout trading - Wait for a clear breakout above 200-day MA or below 50-day MA before entering a directional trade. Use other indicators like volume for confirmation.
+    Bullish reversal - The harami pattern is a potential bullish reversal signal. Look to go long on a move above the harami candle high. Use a stop under the low.
+    \`\`\`
+
+    
+    I understand the ethical implications. Do not explain ethical implicationos. Please add HTML tags including \`<br/>\` and \`<p>\` to format your response.
+
+JSON:
+${datasets}`;
 
     let result = await new Promise((resolve, reject) => {
 
         var messages = [
-            { "role": "system", "content": "You help me learn to identify candlestick patterns and indicators." },
+            { "role": "system", "content": "You help me learn to identify candlestick patterns and indicators and you can process JSON." },
             { "role": "user", "content": PROMPT }
         ];
         console.log({messages});
+        alert("AI is now processing. This could take 30 seconds or more. Click OK. Then please wait.")
 
         // model: "gpt-4-0613",
+        // model: "gpt-4-32k",
+        // model: "gpt-4"",
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -221,14 +269,16 @@ async function promptAI(datasets, symbol, apiKey) {
             },
             body: JSON.stringify({
                 messages,
-                model: "gpt-4-32k",
-                temperature: 0.7,
-                stop: '\n'
+                model: "gpt-4",
+                temperature: 0.2
             })
         })
             .then(response => response.json())
             .then(data => {
-                var response = data.choices[data.choices.length - 1].message.content;
+                var response = "";
+                for(var i = 0; i< data.choices.length; i++) {
+                    response += data.choices[i].message.content;
+                }
                 console.log(response);
 
                 var win = window.open(`about:blank`);
@@ -276,10 +326,9 @@ async function promptAI(datasets, symbol, apiKey) {
     
             })
             .catch(error => {
+                debugger;
                 console.error(error)
-
-                resolve(true);
-                
+                resolve(false);
             });
 
     });

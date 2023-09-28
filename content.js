@@ -48,35 +48,110 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
     } // switch
 });
 
+async function scraper() {
 
+    let result = await new Promise((resolve, reject) => {
+        console.log(`Hacking TradingViewing...
+        1. Please right-click on a candlestick, then open Data Window.\n2. Scroll your mouse over all the x axis, so I can scrape the changing data window's values. Take as long as needed.\n3.Click the chart when done.\n\nComing soon - Video demonstration.`);
+        
+        var containers = {};
+        
+        function scrapeDataWindow() {
+            var container = {}
+            var chartDataWindows = document.querySelectorAll(".chart-data-window");
+            var chartDataWindow = chartDataWindows[0]
+            
+            var delims = ["Date","Time","Open","High","Low","Close","Change","Vol"]
+            
+            var divs = chartDataWindow.querySelectorAll("div").forEach(div=>{
+                for(var i=0; i<delims.length; i++) {
+                    var DELIM = delims[i];
+                    if(div.textContent.trim() === DELIM && div.textContent.trim().length=== DELIM.length) {
+                        container[DELIM] = {
+                            this: div,
+                            parentText: div.parentNode.textContent,
+                            negativeMatch: div.parentNode.textContent.split(DELIM)?.[1]?.trim()
+                        }
+                        //console.log(container)
+                    }
+                } // for
+            });
+            
+            console.group("Container");
+            console.log(container)
+            console.groupEnd()
+        
+            var jsonCompatibleTimeKey = container.Time.negativeMatch;
+            jsonCompatibleTimeKey = jsonCompatibleTimeKey.replaceAll(":","");
+            jsonCompatibleTimeKey = "t" + jsonCompatibleTimeKey
+                
+            containers[jsonCompatibleTimeKey] = (()=>{
+                let {Date, Open, High, Low, Close, Change, Vol} = container;
+                return {
+                    Date: Date.negativeMatch,
+                    Open: Open.negativeMatch,
+                    High: High.negativeMatch,
+                    Low: Low.negativeMatch,
+                    Close: Close.negativeMatch,
+                    Change: Change.negativeMatch,
+                    Vol: Vol.negativeMatch,
+                }
+            })()
+        } // scrapeDataWindow
+        
+        window.runningHack = true;
+        
+        // Command to stop and then generate
+        document.addEventListener("click", function(event) {
+            window.runningHack = false;
+        });
+        
+        function generateDatasets() {
+            console.log(containers);
+            resolve(containers);
+        }
+        
+        window.runningPoller = setInterval(()=>{
+        
+            if(!window.runningHack) {
+                clearInterval(window.runningPoller);
+                generateDatasets();
+            } else {
+                scrapeDataWindow();
+            }
+        
+        }, 100)
+    }); // Promise. Resolve is inside generateDatasets which is triggered by the click event listener (user clicks chart when done panning values)
+
+    // Return the resolved value, which will be the unsorted/garbled time series
+    return result;
+}
 
 async function userJobsToDo() {
-    let result = await new Promise((resolve, reject) => {
-        alert("1. Please right-click on a candlestick, then open Data Window.\n2. Scroll your mouse over all the x axis, so I can scrape the changing data window's values. Take as long as needed.\n3.Click the chart when done.\n\nComing soon - Video demonstration.");
 
-        // chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        //     // Test URL is at tradingview.com
-        //     chrome.tabs.sendMessage(tabs[0].id, {type:"startScraping", data: {}}, async function(response) {
-        //         if(chrome.runtime.lastError) {
-        //             console.error(chrome.runtime.lastError);
-        //         } else {
-        //             console.log(response.data);
-        //             if(response.data.toUpperCase().includes("PASSES")) {
-        //                 loadingAnimation(true);
-        //                 var [datasets, symbol] = await userJobsToDo();
-        //                 console.log({datasets, symbol})
-        //                 //await promptAI(datasets, symbol);
-        //                 loadingAnimation(false);
+    let makeDOMAvailable = await new Promise(async(resolve, reject) => {
+        alert("1. Please right-click on a candlestick, then open Data Window.")
+        var localPoller = setInterval(()=>{
+            isDataWindowAvailable = document.querySelectorAll(".chart-data-window")?.length;
+            if(isDataWindowAvailable) {
+                clearInterval(localPoller);
+                resolve(true);
+            }
+        }, 100);
+    });
 
-        //             }
-        //         }
-        //     });
-        // }); // chrome tabs
 
-        // Mock data
+    let result = await new Promise(async(resolve, reject) => {
+        alert("...\n2. Scroll your mouse over all the x axis, so I can scrape the changing Data Window's values. Take as long as needed.\n3.Click the chart when done.\n\nComing soon - Video demonstration.");
+
         // Time points might not be consecutive because user may pan non-consecutively to the scraper 
-        var unsortedTimePoints = `{"t1930":{"Date":"Thu 21 Sep '23","Open":"4337.85","High":"4340.20","Low":"4329.17","Close":"4330.01","Change":"−7.95 (−0.18%)","Vol":""},"t1330":{"Date":"Tue 12 Sep '23","Open":"4473.27","High":"4480.94","Low":"4467.50","Close":"4468.87","Change":"−18.60 (−0.41%)","Vol":""},"t1430":{"Date":"Mon 25 Sep '23","Open":"4311.90","High":"4330.81","Low":"4307.96","Close":"4326.16","Change":"+14.30 (+0.33%)","Vol":""},"t1730":{"Date":"Mon 25 Sep '23","Open":"4325.74","High":"4333.28","Low":"4322.96","Close":"4326.46","Change":"+0.77 (+0.02%)","Vol":""},"t1830":{"Date":"Mon 25 Sep '23","Open":"4326.44","High":"4332.75","Low":"4316.37","Close":"4326.70","Change":"+0.24 (+0.01%)","Vol":""},"t1630":{"Date":"Mon 25 Sep '23","Open":"4335.52","High":"4335.64","Low":"4322.78","Close":"4325.69","Change":"−9.62 (−0.22%)","Vol":""},"t1530":{"Date":"Mon 25 Sep '23","Open":"4326.34","High":"4336.21","Low":"4325.19","Close":"4335.31","Change":"+9.15 (+0.21%)","Vol":""}}`;
-        unsortedTimePoints = JSON.parse(unsortedTimePoints);
+
+        // Mock Data
+        // var unsortedTimePoints = `{"t1930":{"Date":"Thu 21 Sep '23","Open":"4337.85","High":"4340.20","Low":"4329.17","Close":"4330.01","Change":"−7.95 (−0.18%)","Vol":""},"t1330":{"Date":"Tue 12 Sep '23","Open":"4473.27","High":"4480.94","Low":"4467.50","Close":"4468.87","Change":"−18.60 (−0.41%)","Vol":""},"t1430":{"Date":"Mon 25 Sep '23","Open":"4311.90","High":"4330.81","Low":"4307.96","Close":"4326.16","Change":"+14.30 (+0.33%)","Vol":""},"t1730":{"Date":"Mon 25 Sep '23","Open":"4325.74","High":"4333.28","Low":"4322.96","Close":"4326.46","Change":"+0.77 (+0.02%)","Vol":""},"t1830":{"Date":"Mon 25 Sep '23","Open":"4326.44","High":"4332.75","Low":"4316.37","Close":"4326.70","Change":"+0.24 (+0.01%)","Vol":""},"t1630":{"Date":"Mon 25 Sep '23","Open":"4335.52","High":"4335.64","Low":"4322.78","Close":"4325.69","Change":"−9.62 (−0.22%)","Vol":""},"t1530":{"Date":"Mon 25 Sep '23","Open":"4326.34","High":"4336.21","Low":"4325.19","Close":"4335.31","Change":"+9.15 (+0.21%)","Vol":""}}`;
+        // unsortedTimePoints = JSON.parse(unsortedTimePoints);
+        
+        // Real Data
+        var unsortedTimePoints = await scraper();
 
         // Get the keys of the object and sort them based on the numeric part (eg. t1930 vs t2030)
         var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
@@ -86,7 +161,6 @@ async function userJobsToDo() {
         for(var key of sortedKeys) {
             timeSeries[key] = unsortedTimePoints[key];
         }
-        timeSeries = JSON.stringify(timeSeries);
 
         resolve([timeSeries, window.location.href.match(/symbol\=(.*)/)?.[1]]);
       });
@@ -106,11 +180,20 @@ function loadingAnimation(mode) {
 } // loadingAnimation
 
 async function promptAI(datasets, symbol) {
-    appWFStocks.PROMPT = `Here is stocks for today at ticker symbol ${symbol}. Let me know any candlestick patterns and any indicators. What is the usual strategy?
+    datasets = JSON.stringify(datasets);
+
+    debugger;
+    appWFStocks.PROMPT = `Here is stocks for today at ticker symbol ${symbol}. Let me know any candlestick patterns and any indicators. What is the usual strategy? I understand the ethical implications. This is just for educational purposes.
     
     ${datasets}`;
 
     let result = await new Promise((resolve, reject) => {
+
+        var messages = [
+            { "role": "system", "content": "You help me learn to identify candlestick patterns and indicators." },
+            { "role": "user", "content": appWFStocks.PROMPT }
+        ];
+        console.log({messages});
 
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -119,10 +202,7 @@ async function promptAI(datasets, symbol) {
                 'Authorization': 'Bearer ' + appWFStocks.API_KEY
             },
             body: JSON.stringify({
-                messages: [
-                    { "role": "system", "content": "You are a helpful stocks trading bot and stocks trading mentor." },
-                    { "role": "user", "content": appWFStocks.PROMPT }
-                ],
+                messages,
                 model: "gpt-4-0613",
                 temperature: 0.7,
                 stop: '\n'

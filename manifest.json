@@ -1,0 +1,18 @@
+{
+    "manifest_version": 3,
+    "name": "Stocks Technical Analysis",
+    "version": "1.0",
+    "description": "Feed TradingView's superchart into AI to recognize candlestick patterns and indicators right away.",
+    "icons": {
+
+        "16": "icon16x16.png",
+        "32": "icon32x32.png",
+        "48": "icon48x48.png",
+        "128": "icon128x128.png"
+    },
+    "action": {
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+    "author": "Weng Fei Fung"
+}

@@ -155,6 +155,8 @@ async function userJobsToDo() {
 
         // Get the keys of the object and sort them based on the numeric part (eg. t1930 vs t2030)
         var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
+        //var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(b.substring(1)) - parseInt(a.substring(1)));
+
 
         // Construct a new object with sorted keys
         var timeSeries = {};
@@ -195,6 +197,7 @@ async function promptAI(datasets, symbol) {
         ];
         console.log({messages});
 
+        // model: "gpt-4-0613",
         fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -203,7 +206,7 @@ async function promptAI(datasets, symbol) {
             },
             body: JSON.stringify({
                 messages,
-                model: "gpt-4-0613",
+                model: "gpt-4-32k",
                 temperature: 0.7,
                 stop: '\n'
             })

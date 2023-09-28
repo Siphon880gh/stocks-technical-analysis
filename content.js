@@ -48,69 +48,74 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
     } // switch
 });
 
-async function scraper() {
+window.userJobsToDo = async function() {
+    var instructionsPart1 = `1. Please right-click on a candlestick, then open Data Window.\n2. Then make sure that Price Volume Trend is on from Indicators.\n\nThe next instructions will appear.`,
+    instructionsPart2 = `3. Scroll your mouse over all the x axis, so I can scrape the changing Data Window's values. Take as long as needed.\n4. Click the chart when done.\n\nComing soon - Video demonstration.`
+    window.containers = {};
+
+    console.log(`Enhancing TradingView...
+${instructionsPart1}
+${instructionsPart2}`);
+
+    var result = (async function initScrapingWorkflow() {
+        let makeDOMAvailable = await new Promise(async(resolve, reject) => {
+            alert(instructionsPart1)
+            var localPoller = setInterval(()=>{
+                isDataWindowAvailable = document.querySelectorAll(".chart-data-window")?.length;
+                isVolumeOn = document.querySelector(".widgetbar-widget-datawindow")?.textContent?.match(/(Vol)/)?.length>=2; // would have substring Vol twice in Data Window
+                if(isDataWindowAvailable && isVolumeOn) {
+                    clearInterval(localPoller);
+                    resolve(true);
+                }
+            }, 100);
+        }); // promise
+
+
+        let result = await new Promise(async(resolve, reject) => {
+            alert(`...\n${instructionsPart2}`);
+
+            // Real Data
+            var unsortedTimePoints = await scraper();
+
+            (()=>{
+                    // Get the keys of the object and sort them based on the numeric part (eg. t1930 vs t2030)
+                    var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
+                    //var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(b.substring(1)) - parseInt(a.substring(1)));
+        
+        
+                    // Construct a new object with sorted keys
+                    var timeSeries = {};
+                    for(var key of sortedKeys) {
+                        timeSeries[key] = unsortedTimePoints[key];
+                    }
+        
+                    resolve([timeSeries, window.location.href.match(/symbol\=(.*)/)?.[1]]);
+            })();
+
+        }); // promise
+
+        // result is [{…}, 'AAPL'] 
+        // where in {…}, every x is a key-value pair like t1930: {stats}
+        // where stats contain the high, low, close, open, vol
+        console.log(result);
+        console.log(JSON.stringify(result[0]))
+
+        // Return the resolved value
+        return result;
+    })(); // initScrapingWorkflow
+
+    return result;
+
+    // Todo: Show video or gif steps (Data Window, panning mouse)
+
+} // userJobsToDo
+
+window.scraper = async function() {
 
     let result = await new Promise((resolve, reject) => {
-        console.log(`Hacking TradingViewing...
-        1. Please right-click on a candlestick, then open Data Window.\n2. Scroll your mouse over all the x axis, so I can scrape the changing data window's values. Take as long as needed.\n3.Click the chart when done.\n\nComing soon - Video demonstration.`);
-        
-        var containers = {};
-        
-        function scrapeDataWindow() {
-            var container = {}
-            var chartDataWindows = document.querySelectorAll(".chart-data-window");
-            var chartDataWindow = chartDataWindows[0]
-            
-            var delims = ["Date","Time","Open","High","Low","Close","Change","Vol"]
-            
-            var divs = chartDataWindow.querySelectorAll("div").forEach(div=>{
-                for(var i=0; i<delims.length; i++) {
-                    var DELIM = delims[i];
-                    if(div.textContent.trim() === DELIM && div.textContent.trim().length=== DELIM.length) {
-                        container[DELIM] = {
-                            this: div,
-                            parentText: div.parentNode.textContent,
-                            negativeMatch: div.parentNode.textContent.split(DELIM)?.[1]?.trim()
-                        }
-                        //console.log(container)
-                    }
-                } // for
-            });
-            
-            console.group("Container");
-            console.log(container)
-            console.groupEnd()
-        
-            var jsonCompatibleTimeKey = container.Time.negativeMatch;
-            jsonCompatibleTimeKey = jsonCompatibleTimeKey.replaceAll(":","");
-            jsonCompatibleTimeKey = "t" + jsonCompatibleTimeKey
-                
-            containers[jsonCompatibleTimeKey] = (()=>{
-                let {Date, Open, High, Low, Close, Change, Vol} = container;
-                return {
-                    Date: Date.negativeMatch,
-                    Open: Open.negativeMatch,
-                    High: High.negativeMatch,
-                    Low: Low.negativeMatch,
-                    Close: Close.negativeMatch,
-                    Change: Change.negativeMatch,
-                    Vol: Vol.negativeMatch,
-                }
-            })()
-        } // scrapeDataWindow
-        
-        window.runningHack = true;
         
         // Command to stop and then generate
-        document.addEventListener("click", function(event) {
-            window.runningHack = false;
-        });
-        
-        function generateDatasets() {
-            console.log(containers);
-            resolve(containers);
-        }
-        
+        window.runningHack = true;
         window.runningPoller = setInterval(()=>{
         
             if(!window.runningHack) {
@@ -121,56 +126,65 @@ async function scraper() {
             }
         
         }, 100)
+
+        document.addEventListener("click", function(event) {
+            window.runningHack = false;
+        });
+        
+        function generateDatasets() {
+            console.log(containers);
+            resolve(containers);
+        }
+        
     }); // Promise. Resolve is inside generateDatasets which is triggered by the click event listener (user clicks chart when done panning values)
 
-    // Return the resolved value, which will be the unsorted/garbled time series
-    return result;
-}
-
-async function userJobsToDo() {
-
-    let makeDOMAvailable = await new Promise(async(resolve, reject) => {
-        alert("1. Please right-click on a candlestick, then open Data Window.")
-        var localPoller = setInterval(()=>{
-            isDataWindowAvailable = document.querySelectorAll(".chart-data-window")?.length;
-            if(isDataWindowAvailable) {
-                clearInterval(localPoller);
-                resolve(true);
-            }
-        }, 100);
-    });
-
-
-    let result = await new Promise(async(resolve, reject) => {
-        alert("...\n2. Scroll your mouse over all the x axis, so I can scrape the changing Data Window's values. Take as long as needed.\n3.Click the chart when done.\n\nComing soon - Video demonstration.");
-
-        // Time points might not be consecutive because user may pan non-consecutively to the scraper 
-
-        // Mock Data
-        // var unsortedTimePoints = `{"t1930":{"Date":"Thu 21 Sep '23","Open":"4337.85","High":"4340.20","Low":"4329.17","Close":"4330.01","Change":"−7.95 (−0.18%)","Vol":""},"t1330":{"Date":"Tue 12 Sep '23","Open":"4473.27","High":"4480.94","Low":"4467.50","Close":"4468.87","Change":"−18.60 (−0.41%)","Vol":""},"t1430":{"Date":"Mon 25 Sep '23","Open":"4311.90","High":"4330.81","Low":"4307.96","Close":"4326.16","Change":"+14.30 (+0.33%)","Vol":""},"t1730":{"Date":"Mon 25 Sep '23","Open":"4325.74","High":"4333.28","Low":"4322.96","Close":"4326.46","Change":"+0.77 (+0.02%)","Vol":""},"t1830":{"Date":"Mon 25 Sep '23","Open":"4326.44","High":"4332.75","Low":"4316.37","Close":"4326.70","Change":"+0.24 (+0.01%)","Vol":""},"t1630":{"Date":"Mon 25 Sep '23","Open":"4335.52","High":"4335.64","Low":"4322.78","Close":"4325.69","Change":"−9.62 (−0.22%)","Vol":""},"t1530":{"Date":"Mon 25 Sep '23","Open":"4326.34","High":"4336.21","Low":"4325.19","Close":"4335.31","Change":"+9.15 (+0.21%)","Vol":""}}`;
-        // unsortedTimePoints = JSON.parse(unsortedTimePoints);
+    function scrapeDataWindow() {
+        var container = {}
+        var chartDataWindows = document.querySelectorAll(".chart-data-window");
+        var chartDataWindow = chartDataWindows[0]
         
-        // Real Data
-        var unsortedTimePoints = await scraper();
+        var delims = ["Date","Time","Open","High","Low","Close","Change","Vol"]
+        
+        var divs = chartDataWindow.querySelectorAll("div").forEach(div=>{
+            for(var i=0; i<delims.length; i++) {
+                var DELIM = delims[i];
+                if(div.textContent.trim() === DELIM && div.textContent.trim().length=== DELIM.length) {
+                    container[DELIM] = {
+                        this: div,
+                        parentText: div.parentNode.textContent,
+                        negativeMatch: div.parentNode.textContent.split(DELIM)?.[1]?.trim()
+                    }
+                    //console.log(container)
+                }
+            } // for
+        });
+        
+        console.group("Container");
+        console.log(container)
+        console.groupEnd()
+    
+        var jsonCompatibleTimeKey = container.Time.negativeMatch;
+        jsonCompatibleTimeKey = jsonCompatibleTimeKey.replaceAll(":","");
+        jsonCompatibleTimeKey = "t" + jsonCompatibleTimeKey
+            
+        window.containers[jsonCompatibleTimeKey] = (()=>{
+            let {Date, Open, High, Low, Close, Change, Vol} = container;
+            return {
+                Date: Date.negativeMatch,
+                Open: Open.negativeMatch,
+                High: High.negativeMatch,
+                Low: Low.negativeMatch,
+                Close: Close.negativeMatch,
+                Change: Change.negativeMatch,
+                Vol: Vol.negativeMatch,
+            }
+        })()
+    } // scrapeDataWindow
 
-        // Get the keys of the object and sort them based on the numeric part (eg. t1930 vs t2030)
-        var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(a.substring(1)) - parseInt(b.substring(1)));
-        //var sortedKeys = Object.keys(unsortedTimePoints).sort((a, b) => parseInt(b.substring(1)) - parseInt(a.substring(1)));
+    // Return the resolved value, which will be the unsorted/garbled time series because we just scraped from Data Window and the user could've panned in any direction
+    return result;
+} // scraper
 
-
-        // Construct a new object with sorted keys
-        var timeSeries = {};
-        for(var key of sortedKeys) {
-            timeSeries[key] = unsortedTimePoints[key];
-        }
-
-        resolve([timeSeries, window.location.href.match(/symbol\=(.*)/)?.[1]]);
-      });
-      
-      // Return the resolved value
-      return result;
-    // Todo: Show video or gif steps (Data Window, panning mouse)
-} // userJobsToDo
 
 function loadingAnimation(mode) {
     // You'd have to inject a loading sprite on the content page (not popup.html modal)

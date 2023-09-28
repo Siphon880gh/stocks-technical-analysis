@@ -27,7 +27,7 @@ function onLoad() {
     document.querySelector("#stock-insights-go").addEventListener("click", (e) => {
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
             // Test URL is at tradingview.com
-            chrome.tabs.sendMessage(tabs[0].id, {type:"testURL", data: {}}, function(response) {
+            chrome.tabs.sendMessage(tabs[0].id, {type:"testURL", data: app.ui.APIKeyInput.value}, function(response) {
                 if(chrome.runtime.lastError) {
                     console.error(chrome.runtime.lastError);
                 } else {
@@ -35,7 +35,7 @@ function onLoad() {
                     if(response.data.toUpperCase().includes("PASSES")) {
                         console.log("Successfully found tradingview.com, now scraping, querying AI, and reporting trade insights to user");
                     } else {
-                        console.log("Failed")
+                        console.log("Failed scraping workflow")
                     }
                 }
             });
@@ -52,7 +52,12 @@ function onKeyUp(newOpenAiApiKey) {
             if(chrome.runtime.lastError) {
                 console.error(chrome.runtime.lastError);
             } else {
-                console.log(response.data);
+                if(response.data.toUpperCase().includes("PASSES")) {
+                    console,log("Successfully passed API Key to content.js")
+                    console.log(response.data);
+                } else {
+                    console.log("Failed passing API Key to content.js")
+                }
             }
         });
     });

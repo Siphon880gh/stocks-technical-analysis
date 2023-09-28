@@ -1,5 +1,4 @@
 var appWFStocks = {
-    PROMPT: "Please reiterate to me: 'Error, something went wrong.'",
     API_KEY: "",
 }
 
@@ -12,11 +11,14 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
     switch(request.type) {
         case "testAPIKey":
 
-            localStorage.setItem("ce__stocks_api_key", request.data);
-            appWFStocks.API_KEY = openAiApiKey;
-
-            //console.log(request.data); // This will log to the main page’s console. It's the API key.
-            sendResponse({data:"Success: Popup.js sent API Key to content.js where the scraper and AI prompter is housed"});
+            // Test API Key
+            if(request.data.length) {
+                appWFStocks.API_KEY = request.data;
+                sendResponse({data:"Success: Popup.js sent API Key to content.js where the scraper and AI prompter is housed"});
+            } else {
+                appWFStocks.API_KEY = "";
+                sendResponse({data:"Failed: You didn't set an API Key"});
+            }
             break;
         case "testURL":
             if(!window.location.href.toLowerCase().includes("tradingview.com") 
@@ -26,8 +28,8 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
             } else {
 
                 // Test API Key again
-                var openAiApiKey = localStorage.getItem("ce__stocks_api_key");
-                if(openAiApiKey) {
+                var openAiApiKey = request.data;
+                if(openAiApiKey.length) {
                     appWFStocks.API_KEY = openAiApiKey;
                     sendResponse({data:"PASSES"});
                 } else {
@@ -40,7 +42,7 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
                 loadingAnimation(true);
                 var [datasets, symbol] = await userJobsToDo();
                 console.log({datasets, symbol})
-                await promptAI(datasets, symbol);
+                await promptAI(datasets, symbol, appWFStocks.API_KEY);
                 loadingAnimation(false);
 
             } // testURL
@@ -195,11 +197,10 @@ function loadingAnimation(mode) {
     }
 } // loadingAnimation
 
-async function promptAI(datasets, symbol) {
+async function promptAI(datasets, symbol, apiKey) {
     datasets = JSON.stringify(datasets);
 
-    debugger;
-    appWFStocks.PROMPT = `Here is stocks for today at ticker symbol ${symbol}. Let me know any candlestick patterns and any indicators. What is the usual strategy? I understand the ethical implications. This is just for educational purposes.
+    var PROMPT = `Here is stocks for today at ticker symbol ${symbol}. Let me know any candlestick patterns and any indicators. What is the usual strategy? I understand the ethical implications. This is just for educational purposes.
     
     ${datasets}`;
 
@@ -207,7 +208,7 @@ async function promptAI(datasets, symbol) {
 
         var messages = [
             { "role": "system", "content": "You help me learn to identify candlestick patterns and indicators." },
-            { "role": "user", "content": appWFStocks.PROMPT }
+            { "role": "user", "content": PROMPT }
         ];
         console.log({messages});
 
@@ -216,7 +217,7 @@ async function promptAI(datasets, symbol) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + appWFStocks.API_KEY
+                'Authorization': 'Bearer ' + apiKey
             },
             body: JSON.stringify({
                 messages,

@@ -14,6 +14,7 @@ By Weng Fei Fung. A concept occurred to me as I read about the prediction of sto
 - [Description](#description)
 - [Preview](#camera-preview)
 - [Installation and Usage](#minidisc-installation-and-usage)
+- [Attribution](#handshake-attribution)
 - [Future Version](#crystal_ball-future-version)
 
 :camera: Preview:
@@ -26,6 +27,10 @@ By Weng Fei Fung. A concept occurred to me as I read about the prediction of sto
 If I haven't uploaded to the Chrome Web Store yet, please kindly enable Developer Mode at the extensions page, then drop in the folder containing this code.
 
 Because I have not came up with a pricing model to cover costs and this is essentially free, you need to enter your own OpenAI API Key. Clicking the extension icon on the Chrome browser will give you a space to enter your API Key. Clicking the question icon will take you to OpenAI API platform where you can get setup for an API key.
+
+## :handshake: Attribution
+
+Thanks to Zulkifly Suradin at Flaticon for the [icon](https://www.flaticon.com/free-icon/candlestick-chart_6353961?related_id=6353961).
 
 ## :crystal_ball: Future version
 In upcoming versions, the report will also incorporate macro analysis. This enhancement will be facilitated by a scraper, housed on my own server, designed to navigate the internet news at intervals using cron jobs. This advanced feature will present information inclusive of sentiment metrics and historical considerations and combine with metrics in different algorithms that make sense for different industries. This will seamlessly integrate with my Chrome extension via API under the hood for paid members at the Pro tier.

@@ -19,9 +19,9 @@ By Weng Fei Fung. A concept occurred to me as I read about the prediction of sto
 
 :camera: Preview:
 ---
-<img alt="chrome-popover" src="https://scontent-sjc3-1.xx.fbcdn.net/v/t39.30808-6/383219912_2959395600859757_6788235496248603569_n.jpg?stp=cp6_dst-jpg&_nc_cat=103&ccb=1-7&_nc_sid=49d041&_nc_ohc=xHuyr91CX10AX_s8lnC&_nc_ht=scontent-sjc3-1.xx&oh=00_AfCbrHZoc6FeqP7NugW0vfejDZ5zgQvI-_-LqwRzRblHZw&oe=651ACBF3" style="width:50%;">
+<img alt="chrome-popover" src="screenshots/extension.jpg" style="width:50%;">
 
-![image](https://scontent-sjc3-1.xx.fbcdn.net/v/t39.30808-6/384473146_2959395370859780_5321081469742067896_n.jpg?stp=cp6_dst-jpg&_nc_cat=100&ccb=1-7&_nc_sid=49d041&_nc_ohc=s80oXm2Yu0gAX-jKmIn&_nc_ht=scontent-sjc3-1.xx&oh=00_AfCbooPrBieal9LixiTkXxdMj1rThoJAcc4awdWPmAqMhw&oe=65196489)
+![Recommendations](screenshots/recommendations.jpg)
 
 ## :minidisc: Installation and Advance Use:
 If I haven't uploaded to the Chrome Web Store yet, please kindly enable Developer Mode at the extensions page, then drop in the folder containing this code.
